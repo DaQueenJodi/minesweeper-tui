@@ -1,0 +1,40 @@
+[
+  {
+    "arguments": [
+      "/usr/lib/llvm/15/bin/clang",
+      "-Wextra",
+      "-Wall",
+      "-Wpedantic",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-ggdb",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/main.o",
+      "src/main.c"
+    ],
+    "directory": "/hdd/Documents/Programming/C/minesweeper-tui",
+    "file": "/hdd/Documents/Programming/C/minesweeper-tui/src/main.c",
+    "output": "/hdd/Documents/Programming/C/minesweeper-tui/src/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/lib/llvm/15/bin/clang",
+      "-Wextra",
+      "-Wall",
+      "-Wpedantic",
+      "-fsanitize=address",
+      "-fsanitize=undefined",
+      "-ggdb",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/grid.o",
+      "src/grid.c"
+    ],
+    "directory": "/hdd/Documents/Programming/C/minesweeper-tui",
+    "file": "/hdd/Documents/Programming/C/minesweeper-tui/src/grid.c",
+    "output": "/hdd/Documents/Programming/C/minesweeper-tui/src/grid.o"
+  }
+]
