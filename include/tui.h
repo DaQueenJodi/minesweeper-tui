@@ -1,12 +1,16 @@
 #pragma once
 #include "util.h"
+#include <curses.h>
 #include <ncurses.h>
+#include <stdint.h>
+#include <time.h>
 
 typedef struct {
   WINDOW *game_board;
   Point cursor;
-  // WINDOW *score;
-  // WINDOW *help;
+  WINDOW *stats;
+  WINDOW *help;
+	WINDOW *time;
 } TuiCtx;
 
 #define FLAG_PAIR 1
@@ -17,5 +21,5 @@ typedef struct {
 void setup_tui(void);
 void end_tui(TuiCtx *t);
 TuiCtx *create_tui_ui(int h, int w);
-
-
+void update_stats(TuiCtx *tc, GlobalStats *gs);
+void update_timer(TuiCtx *tc, double time);

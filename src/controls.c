@@ -1,6 +1,7 @@
 #include "controls.h"
 #include "grid.h"
 #include "tui.h"
+#include "util.h"
 #include <curses.h>
 
 bool controls_down(char c) {
@@ -63,7 +64,7 @@ bool controls_dig(char c) {
   return false;
 }
 
-int handle_controls(TuiCtx *tc, Tiles *ts) {
+int handle_controls(TuiCtx *tc, Tiles *ts, GlobalStats *gs) {
   char c = getch();
   if (controls_left(c)) {
     if (tc->cursor.x > 0)
@@ -81,18 +82,26 @@ int handle_controls(TuiCtx *tc, Tiles *ts) {
     return END_STATUS_QUIT;
   } else if (controls_flag(c)) {
     Tile *t = tiles_get_pos(ts, tc->cursor);
-    if (!t->revealed)
-      t->is_flagged = !t->is_flagged; // toggle bolean
-    else
-      complete_tile_flags(ts, tc->cursor);
+    if (!t->revealed) {
+      if (t->is_flagged) {
+        t->is_flagged = false;
+        gs->flags_left += 1; // add back the flag
+      } else if (!t->is_flagged) {
+        t->is_flagged = true;
+        gs->flags_left -= 1; // remove a flag
+      }
+    } else
+      complete_tile_flags(ts, tc->cursor, gs);
   } else if (controls_dig(c)) {
     Tile *t = tiles_get_pos(ts, tc->cursor);
-    if (!t->revealed) {
-      if (!tiles_dig(ts, tc->cursor))
+    if (!t->is_flagged) {
+      gs->num_turns += 1;
+      if (!t->revealed) {
+        if (!tiles_dig(ts, tc->cursor, gs))
+          return END_STATUS_LOSS;
+      } else if (!complete_flagged_tile(ts, tc->cursor, gs))
         return END_STATUS_LOSS;
-    } else if (!complete_flagged_tile(ts, tc->cursor))
-      return END_STATUS_LOSS;
+    }
   }
-
   return END_STATUS_NADA;
 }
