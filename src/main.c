@@ -81,14 +81,14 @@ int main(int argc, char **argv) {
 
   if (argc < 4) {
     printf("usage: %s border_h border_w num_bombs [seed] \n", argv[0]);
-		exit(1);
+    exit(1);
   }
   int board_h = atoi(argv[1]);
   int board_w = atoi(argv[2]);
   int num_bombs = atoi(argv[3]);
-	
+
   unsigned int seed = time(NULL);
-	
+
   if (argc > 5) {
     seed = atoi(argv[3]);
   }
@@ -197,9 +197,8 @@ int main(int argc, char **argv) {
 
   free_tiles(ts);
 
+  free(gs);
 
-	free(gs);
-	
   end_tui(tc);
 
   return 0;

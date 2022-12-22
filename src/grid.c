@@ -169,7 +169,7 @@ void free_tiles(Tiles *ts) {
 }
 
 static void next_point(Tiles *ts, Point *p) {
-  if (p->x == ts->width) {
+  if (p->x == ts->width - 1) {
     p->x = 0;
     p->y += 1;
   } else {
@@ -198,11 +198,15 @@ bool tiles_dig(Tiles *ts, Point p, GlobalStats *gs) {
   Tile *t = tiles_get_pos(ts, p);
   if (TILES_DIG_FIRST_MOVE) {
     if (t->is_mine) {
-      t->is_mine = false;
-      Tile *mine_tile = tiles_get_pos(ts, displace_mine_point(ts));
+      Point mine_p = displace_mine_point(ts);
+      Tile *mine_tile = tiles_get_pos(ts, mine_p);
       mine_tile->is_mine = true;
-      // TODO: make this change the surrounding tiles to match the new mine
-      // count
+      t->is_mine = false;
+      Point ps[8];
+      size_t length = get_adj_tiles(ts, mine_p, ps);
+      for (size_t i = 0; i < length; i++) {
+        tiles_get_pos(ts, ps[i])->num += 1;
+      }
     }
     TILES_DIG_FIRST_MOVE = false;
   } else if (t->is_mine) {

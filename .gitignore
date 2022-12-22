@@ -2,3 +2,4 @@
 bin
 seeds.txt
 welp.txt
+src/*.o

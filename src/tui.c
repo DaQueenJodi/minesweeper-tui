@@ -29,9 +29,9 @@ TuiCtx *create_tui_ui(int h, int w) {
 
   t->game_board = newwin(window_h, window_w, center_y, center_x);
   t->cursor = (Point){.x = 0, .y = 0};
-	t->stats = newwin(4, 30, center_y + 10, center_x - 40);
-	t->time = newwin(1, 40, center_y - 2, center_x + (window_w / 2) - 15);
-  t->help = newwin(50, 100, center_y, center_x - 40);
+	t->stats = newwin(4, 10, 0, 0);
+	t->time = newwin(1, 4, 1,0);
+  t->help = newwin(50, 100, 0, 0);
 	// this is static so we might as well just do it here
 	print_help(t->help);
 	wrefresh(t->help);
@@ -50,7 +50,7 @@ void setup_tui(void) {
              // windows from displaying at first
 
   init_pair(FLAG_PAIR, COLOR_WHITE, COLOR_RED);
-  init_pair(EMPTY_PAIR, COLOR_WHITE, COLOR_CYAN);
+  // init_pair(EMPTY_PAIR, COLOR_WHITE, COLOR_CYAN);
   init_pair(REVEALED_PAIR, COLOR_BLACK, COLOR_YELLOW);
   init_pair(UNREVEALED_PAIR, COLOR_WHITE, COLOR_MAGENTA);
 }
@@ -58,15 +58,14 @@ void setup_tui(void) {
 void update_stats(TuiCtx *tc, GlobalStats *gs) {
 
   WINDOW *win = tc->stats;
-  // 0, 0 is handled in update_timer_stats, below
-  wmove(win, 1, 0);
+  wmove(win, 0, 0);
   wprintw(win, "turns: %zu", gs->num_turns);
-  wmove(win, 2, 0);
+  wmove(win, 1, 0);
 
 	// TODO: add leading 0s to fix issue with it getting
   // to lower digits, will need a proper fix eventually
   wprintw(win, "flags left: %02d", gs->flags_left);
-	wmove(win, 3, 0);
+	wmove(win, 2, 0);
 	wprintw(win, "tiles left: %03zu", gs->tiles_left);
 }
 
