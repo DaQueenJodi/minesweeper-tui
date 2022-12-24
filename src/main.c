@@ -15,11 +15,6 @@
 
 pthread_mutex_t refresh_lock;
 pthread_mutex_t update_quit_lock;
-pthread_mutex_t update_win_lock;
-#define REFRESH_WINDOW(win)                                                    \
-  pthread_mutex_lock(&refresh_lock);                                           \
-  wrefresh(win);                                                               \
-  pthread_mutex_unlock(&refresh_lock);
 struct timeval initial_time;
 
 bool quit_timer = false;
@@ -36,48 +31,23 @@ static void *update_timer_thread(void *vargp) {
         (double)(current_time.tv_usec - initial_time.tv_usec) / 1000000 +
         (double)(current_time.tv_sec - initial_time.tv_sec);
 
-    pthread_mutex_lock(&update_win_lock);
+    pthread_mutex_lock(&refresh_lock);
+    werase(tc->time);
     update_timer(tc, time);
-    pthread_mutex_unlock(&update_win_lock);
-    REFRESH_WINDOW(tc->time);
+    wrefresh(tc->time);
+    pthread_mutex_unlock(&refresh_lock);
 
-    usleep(100000); // 1 milisecond
+    napms(100); // tenth of a second
 
     pthread_mutex_lock(&update_quit_lock);
   }
   return NULL;
 }
 
-/* test randomness
-int main(void) {
-        srand(time(NULL));
-  int nums[100];
-  int ocurrances_arr[15] = {0};
-
-  // this is bad but its for testing so shush
-  for (int i = 0; i < 50; i++) {
-    for (int i = 0; i < 100; i++) {
-      nums[i] = rand_range(15);
-    }
-    for (int i = 0; i < 15; i++) {
-      int ocurrances = 0;
-
-      for (int j = 0; j < 100; j++) {
-        if (nums[j] == i) {
-          ocurrances += 1;
-        }
-      }
-      ocurrances_arr[i] += ocurrances;
-    }
-  }
-  for (int i = 0; i < 15; i++) {
-    printf("%d occured %d times \n", i, ocurrances_arr[i]);
-  }
-        } */
-
 typedef enum { GameWon, GameLoss, GameQuit } GameResult;
 
 int main(int argc, char **argv) {
+
 
   if (argc < 4) {
     printf("usage: %s border_h border_w num_bombs [seed] \n", argv[0]);
@@ -89,8 +59,15 @@ int main(int argc, char **argv) {
 
   unsigned int seed = time(NULL);
 
+  if (argc > 4) {
+    seed = atoi(argv[4]);
+  }
+
+  bool extra_ui = true;
+
   if (argc > 5) {
-    seed = atoi(argv[3]);
+    if (strcmp(argv[5], "n") == 0)
+      extra_ui = false;
   }
 
   gettimeofday(&initial_time, NULL);
@@ -109,7 +86,8 @@ int main(int argc, char **argv) {
   gs->tiles_left = (board_h * board_w) - num_bombs;
   gs->num_turns = 0;
 
-  TuiCtx *tc = create_tui_ui(board_h, board_w);
+
+  TuiCtx *tc = create_tui_ui(board_h, board_w, extra_ui);
 
   if (pthread_mutex_init(&refresh_lock, NULL) != 0) {
     fprintf(stderr, "failed to create refresh mutex \n");
@@ -120,15 +98,14 @@ int main(int argc, char **argv) {
     fprintf(stderr, "failed to create update mutex \n");
     exit(1);
   }
-  if (pthread_mutex_init(&update_win_lock, NULL) != 0) {
-    fprintf(stderr, "failed to create update win lock mutex \n");
-    exit(1);
-  }
+
   pthread_t thread_id;
-  int error = pthread_create(&thread_id, NULL, update_timer_thread, tc);
-  if (error != 0) {
-    fprintf(stderr, "failed to create thread: %s", strerror(error));
-    exit(1);
+  if (extra_ui) {
+    int error = pthread_create(&thread_id, NULL, update_timer_thread, tc);
+    if (error != 0) {
+      fprintf(stderr, "failed to create thread: %s", strerror(error));
+      exit(1);
+    }
   }
 
   Tiles *ts = make_grid(board_h, board_w, num_bombs, gs);
@@ -138,18 +115,19 @@ int main(int argc, char **argv) {
   GameResult game_result;
 
   while (!quit) {
-    pthread_mutex_lock(&update_win_lock);
-    wclear(tc->game_board);
+    pthread_mutex_lock(&refresh_lock);
+    // we dont need to erase the board window since its always completely
+    // overwritten in print_tiles
     print_tiles(ts, tc);
-    pthread_mutex_unlock(&update_win_lock);
-    REFRESH_WINDOW(tc->game_board);
-
-    pthread_mutex_lock(&update_win_lock);
-    wclear(tc->stats);
-    update_stats(tc, gs);
-    pthread_mutex_unlock(&update_win_lock);
-    REFRESH_WINDOW(tc->stats);
-
+    wrefresh(tc->game_board);
+    pthread_mutex_unlock(&refresh_lock);
+    if (extra_ui) {
+      pthread_mutex_lock(&refresh_lock);
+      werase(tc->stats);
+      update_stats(tc, gs);
+      wrefresh(tc->stats);
+      pthread_mutex_unlock(&refresh_lock);
+    }
     int end_status = handle_controls(tc, ts, gs);
     switch (end_status) {
     case END_STATUS_LOSS: {
@@ -176,23 +154,24 @@ int main(int argc, char **argv) {
   pthread_mutex_unlock(&update_quit_lock);
 
   if (game_result != GameQuit) {
-    //	refresh();
+    // erase these just because theyre not important
+    werase(tc->stats);
+    werase(tc->help);
+    wrefresh(tc->stats);
+    wrefresh(tc->help);
     print_tiles(ts, tc);
     wrefresh(tc->game_board);
-    // TODO: make this not hardcoded
-    WINDOW *result_win = newwin(1, 20, 15, 50);
     if (game_result == GameLoss)
-      wprintw(result_win, "you lost :pensive:");
+      wprintw(tc->game_result, "you lost :pensive:");
     else
-      wprintw(result_win, "you won!");
-    wrefresh(result_win);
+      wprintw(tc->game_result, "you won!");
+    wrefresh(tc->game_result);
     while (true) {
       char c = getch();
       if (controls_quit(c)) {
         break;
       }
     }
-    delwin(result_win);
   }
 
   free_tiles(ts);

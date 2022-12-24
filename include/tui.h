@@ -11,6 +11,7 @@ typedef struct {
   WINDOW *stats;
   WINDOW *help;
 	WINDOW *time;
+	WINDOW *game_result;
 } TuiCtx;
 
 #define FLAG_PAIR 1
@@ -20,6 +21,6 @@ typedef struct {
 
 void setup_tui(void);
 void end_tui(TuiCtx *t);
-TuiCtx *create_tui_ui(int h, int w);
+TuiCtx *create_tui_ui(int h, int w, bool extra_ui);
 void update_stats(TuiCtx *tc, GlobalStats *gs);
 void update_timer(TuiCtx *tc, double time);

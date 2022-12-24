@@ -2,7 +2,11 @@
 #include "grid.h"
 #include "tui.h"
 #include "util.h"
+#include <bits/pthreadtypes.h>
 #include <curses.h>
+#include <ncurses.h>
+#include <pthread.h>
+#include <stddef.h>
 
 bool controls_down(char c) {
   switch (c) {
@@ -64,8 +68,16 @@ bool controls_dig(char c) {
   return false;
 }
 
+extern pthread_mutex_t refresh_lock;
+
 int handle_controls(TuiCtx *tc, Tiles *ts, GlobalStats *gs) {
-  char c = getch();
+  char c;
+  pthread_mutex_lock(&refresh_lock);
+  c = getch();
+  pthread_mutex_unlock(&refresh_lock);
+	if (c == ERR) {
+    return END_STATUS_NADA;
+  }
   if (controls_left(c)) {
     if (tc->cursor.x > 0)
       tc->cursor.x -= 1;

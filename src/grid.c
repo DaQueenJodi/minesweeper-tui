@@ -135,6 +135,7 @@ void print_tiles(Tiles *ts, TuiCtx *tc) {
       }
       Tile *t = tiles_get_pos(ts, p);
       if (t->is_flagged) {
+				fprintf(stderr, "uwu \n");
         COLOR_PAIR_ON(FLAG_PAIR);
         wprintw(win, ">");
       } else if (t->revealed) {
@@ -145,12 +146,12 @@ void print_tiles(Tiles *ts, TuiCtx *tc) {
             COLOR_PAIR_ON(REVEALED_PAIR);
             wprintw(win, "%d", t->num);
           } else {
-            COLOR_PAIR_ON(UNREVEALED_PAIR);
+            COLOR_PAIR_ON(EMPTY_PAIR);
             wprintw(win, " ");
           }
         }
       } else {
-        COLOR_PAIR_ON(EMPTY_PAIR);
+        COLOR_PAIR_ON(UNREVEALED_PAIR);
         wattron(win, COLOR_PAIR(FLAG_PAIR));
         wprintw(win, " ");
       }
@@ -192,11 +193,10 @@ static Point displace_mine_point(Tiles *ts) {
   assert(0 && "unreachable");
 }
 
-bool TILES_DIG_FIRST_MOVE = true;
 // TODO: make this more efficient and not recursive
 bool tiles_dig(Tiles *ts, Point p, GlobalStats *gs) {
   Tile *t = tiles_get_pos(ts, p);
-  if (TILES_DIG_FIRST_MOVE) {
+  if (gs->num_turns == 1) {
     if (t->is_mine) {
       Point mine_p = displace_mine_point(ts);
       Tile *mine_tile = tiles_get_pos(ts, mine_p);
@@ -207,12 +207,17 @@ bool tiles_dig(Tiles *ts, Point p, GlobalStats *gs) {
       for (size_t i = 0; i < length; i++) {
         tiles_get_pos(ts, ps[i])->num += 1;
       }
+			length = get_adj_tiles(ts, p, ps);
+      for (size_t i = 0; i < length; i++) {
+        tiles_get_pos(ts, ps[i])->num -= 1;
+      }
+			t->revealed = true;
     }
-    TILES_DIG_FIRST_MOVE = false;
   } else if (t->is_mine) {
-		t->revealed = true;
+    t->revealed = true;
     return false;
   }
+	
   if (!t->revealed) {
     t->revealed = true;
     gs->tiles_left -= 1;
@@ -232,7 +237,7 @@ bool tiles_dig(Tiles *ts, Point p, GlobalStats *gs) {
         tiles_dig(ts, ps[i], gs); // only recurse if its a 0
       } else {
         t->revealed = true;
-				gs->tiles_left -= 1;
+        gs->tiles_left -= 1;
       }
     }
   }
