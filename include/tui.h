@@ -15,7 +15,7 @@ typedef struct {
 } TuiCtx;
 
 #define FLAG_PAIR 1
-#define EMPTY_PAIR 3
+#define EMPTY_PAIR 2
 #define REVEALED_PAIR 3
 #define UNREVEALED_PAIR 4
 

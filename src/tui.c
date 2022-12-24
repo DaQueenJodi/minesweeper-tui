@@ -56,7 +56,7 @@ void setup_tui(void) {
              // windows from displaying at first
 
   init_pair(FLAG_PAIR, COLOR_BLACK, COLOR_GREEN);
-  init_pair(EMPTY_PAIR, COLOR_WHITE, COLOR_CYAN);
+  init_pair(EMPTY_PAIR, COLOR_WHITE, COLOR_YELLOW);
   init_pair(REVEALED_PAIR, COLOR_BLACK, COLOR_YELLOW);
   init_pair(UNREVEALED_PAIR, COLOR_WHITE, COLOR_MAGENTA);
 }

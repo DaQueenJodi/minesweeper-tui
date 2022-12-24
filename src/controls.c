@@ -2,7 +2,7 @@
 #include "grid.h"
 #include "tui.h"
 #include "util.h"
-#include <bits/pthreadtypes.h>
+#include <sys/types.h>
 #include <curses.h>
 #include <ncurses.h>
 #include <pthread.h>

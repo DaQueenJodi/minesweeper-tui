@@ -135,7 +135,6 @@ void print_tiles(Tiles *ts, TuiCtx *tc) {
       }
       Tile *t = tiles_get_pos(ts, p);
       if (t->is_flagged) {
-				fprintf(stderr, "uwu \n");
         COLOR_PAIR_ON(FLAG_PAIR);
         wprintw(win, ">");
       } else if (t->revealed) {
@@ -152,7 +151,6 @@ void print_tiles(Tiles *ts, TuiCtx *tc) {
         }
       } else {
         COLOR_PAIR_ON(UNREVEALED_PAIR);
-        wattron(win, COLOR_PAIR(FLAG_PAIR));
         wprintw(win, " ");
       }
 
