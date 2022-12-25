@@ -6,12 +6,16 @@
 #include <curses.h>
 #include <ncurses.h>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+
+#define JODCCL_IMPLEMENTATION
+#include "jodccl.h"
 
 pthread_mutex_t refresh_lock;
 pthread_mutex_t update_quit_lock;
@@ -48,27 +52,29 @@ typedef enum { GameWon, GameLoss, GameQuit } GameResult;
 
 int main(int argc, char **argv) {
 
+  (void)argc;
 
-  if (argc < 4) {
-    printf("usage: %s border_h border_w num_bombs [seed] \n", argv[0]);
-    exit(1);
-  }
-  int board_h = atoi(argv[1]);
-  int board_w = atoi(argv[2]);
-  int num_bombs = atoi(argv[3]);
+  bool extra_ui = false;
+  int board_w;
+  int board_h;
+  int num_bombs;
+  int seed = time(NULL);
 
-  unsigned int seed = time(NULL);
+  jcl_add_bool(&extra_ui, "extraui", "ui", "disables the extra ui elements",
+               false);
+  jcl_add_int(&board_h, "height", "h", "sets the height of the board",
+              true);
+  jcl_add_int(&board_w, "width", "w", "sets the width of the board", true);
+  jcl_add_int(&seed, "seed", "s", "sets the seed used for board generation",
+              false);
+  jcl_add_int(&num_bombs, "bombs", "b", "sets the number of bombs on the board",
+              true);
+  JCLError err = jcl_parse_args(argv);
 
-  if (argc > 4) {
-    seed = atoi(argv[4]);
-  }
-
-  bool extra_ui = true;
-
-  if (argc > 5) {
-    if (strcmp(argv[5], "n") == 0)
-      extra_ui = false;
-  }
+	if (err.err != JCL_PARSE_OK) {
+		jcl_print_error(err);
+		exit(1);
+	}
 
   gettimeofday(&initial_time, NULL);
 
@@ -85,7 +91,6 @@ int main(int argc, char **argv) {
   gs->flags_left = num_bombs;
   gs->tiles_left = (board_h * board_w) - num_bombs;
   gs->num_turns = 0;
-
 
   TuiCtx *tc = create_tui_ui(board_h, board_w, extra_ui);
 
